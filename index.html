@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eyewa | Role & Department Mapping</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#34a2a2; --coral:#eb6c5c; --cream:#fbf6f6; --ink:#333333;
+  --teal-lt:#e8f5f5; --coral-lt:#fdf0ee;
+  --border:#e8e0e0; --muted:#888080; --card:#ffffff;
+  --subdept-bg:#f0fafa; --subdept-border:#b8dede;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--ink);padding:20px 36px 18px;display:flex;align-items:center;gap:16px;border-bottom:3px solid var(--teal);}
+.logo{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.5px;}
+.logo em{color:var(--teal);font-style:normal;}
+.hdr-sep{width:1px;height:26px;background:#555;}
+.hdr-info{flex:1;}
+.hdr-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#aaa;}
+.hdr-sub{font-size:11.5px;color:#666;margin-top:2px;}
+.hdr-badge{font-family:'DM Mono',monospace;font-size:10px;background:var(--teal);color:#fff;padding:5px 12px;border-radius:3px;white-space:nowrap;}
+
+/* SEARCH */
+.search-wrap{background:var(--ink);padding:0 36px 14px;}
+.search-box{display:flex;align-items:center;gap:10px;background:#2a2a2a;border:1.5px solid #444;border-radius:8px;padding:0 14px;transition:border-color 0.15s;}
+.search-box:focus-within{border-color:var(--teal);}
+.search-icon{color:var(--teal);font-size:14px;flex-shrink:0;}
+#searchInput{flex:1;background:transparent;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13.5px;color:#fff;padding:11px 0;}
+#searchInput::placeholder{color:#555;}
+#clearBtn{background:none;border:none;color:#555;cursor:pointer;font-size:15px;padding:0 2px;transition:color 0.1s;}
+#clearBtn:hover{color:#ccc;}
+#searchCount{font-family:'DM Mono',monospace;font-size:11px;color:#666;white-space:nowrap;}
+
+/* SEARCH RESULTS */
+#searchResults{display:none;padding:22px 36px 40px;max-width:1200px;}
+.sr-empty{padding:28px 0;color:var(--muted);font-size:14px;}
+.sr-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.sr-pill{display:inline-flex;align-items:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:4px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.sr-pill.retail{background:var(--teal-lt);color:var(--teal);}
+.sr-pill.ops{background:var(--coral-lt);color:var(--coral);}
+.sr-role{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+.sr-path{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.65;}
+.sr-path strong{color:var(--ink);font-weight:600;}
+.sr-note{font-size:11.5px;color:#b07a00;font-style:italic;margin-top:3px;}
+.sr-warn{font-size:12px;color:var(--coral);font-weight:600;margin-top:5px;padding:7px 10px;background:var(--coral-lt);border-radius:5px;border-left:3px solid var(--coral);}
+
+/* MAIN */
+#mainContent{max-width:1200px;padding:28px 36px 60px;}
+
+/* ACCORDION */
+.accordion{margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.acc-trigger{width:100%;border:none;cursor:pointer;padding:0;display:flex;align-items:center;background:none;text-align:left;}
+.acc-trigger:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+.acc-header{flex:1;display:flex;align-items:center;gap:14px;padding:16px 22px;color:#fff;}
+.acc-icon{font-size:18px;flex-shrink:0;}
+.acc-titles{flex:1;}
+.acc-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;}
+.acc-sub{font-size:11.5px;opacity:0.6;margin-top:2px;}
+.acc-chevron{font-size:13px;color:rgba(255,255,255,0.5);padding:0 20px;transition:transform 0.25s ease;flex-shrink:0;display:flex;align-items:center;}
+.accordion.open .acc-chevron{transform:rotate(180deg);}
+.acc-body{display:none;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:18px;}
+.accordion.open .acc-body{display:block;}
+
+/* CXO BANNER */
+.cxo-banner{background:var(--ink);border-radius:6px;padding:10px 14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.cxo-label{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin-right:4px;flex-shrink:0;}
+.cxo-chip{font-size:11.5px;color:#ddd;padding:4px 10px;background:#2a2a2a;border-radius:20px;display:inline-flex;align-items:center;gap:5px;}
+.cxo-chip strong{color:#fff;font-weight:600;}
+.cxo-chip em{color:var(--teal);font-style:normal;font-size:10.5px;}
+
+/* DEPT GRID */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
+.dept-card{background:var(--cream);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.retail-acc .dept-card{border-top:2px solid var(--teal);}
+.ops-acc .dept-card{border-top:2px solid var(--coral);}
+
+.dept-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;background:var(--card);border-bottom:1px solid var(--border);}
+.dept-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.dept-badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:20px;background:#eee;color:var(--muted);}
+
+.hm-note{font-size:11.5px;color:#2a7a7a;padding:7px 14px;background:var(--teal-lt);border-bottom:1px solid #b8dede;line-height:1.55;}
+.legacy-note{font-size:11px;color:#b07a00;padding:7px 14px;background:#fef4e0;border-bottom:1px solid #edd590;line-height:1.5;}
+
+/* SUBDEPT */
+.subdept-block{border-bottom:1px solid var(--border);}
+.subdept-block:last-child{border-bottom:none;}
+.subdept-label{padding:7px 14px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:#2a7a7a;background:var(--subdept-bg);border-bottom:1px solid var(--subdept-border);letter-spacing:0.3px;display:flex;align-items:center;gap:6px;}
+.subdept-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;opacity:0.7;}
+.ops-acc .subdept-label{color:#c0402e;background:#fff5f4;border-bottom-color:#f5c4be;}
+.ops-acc .subdept-label::before{background:var(--coral);}
+.subdept-label .note-tag{font-size:9.5px;color:#b07a00;font-style:italic;font-family:'DM Sans',sans-serif;font-weight:400;}
+
+.roles-list{padding:9px 14px 11px;display:flex;flex-direction:column;gap:4px;}
+.role-row{font-size:12.5px;color:var(--ink);display:flex;align-items:flex-start;gap:6px;line-height:1.5;}
+.role-row::before{content:'·';color:#ccc;flex-shrink:0;margin-top:1px;}
+.role-em{font-size:10.5px;color:var(--muted);font-style:italic;margin-left:2px;}
+
+/* OC */
+.oc-card{border-top:2px solid #9b59b6 !important;}
+.oc-card .subdept-label{color:#6c3483;background:#f5eafb;border-bottom-color:#d7aee8;}
+.oc-card .subdept-label::before{background:#9b59b6;}
+
+/* FOOTER */
+.footer-note{margin-top:28px;border:1.5px solid var(--coral);border-radius:8px;overflow:hidden;}
+.footer-note-head{background:var(--coral-lt);border-bottom:1px solid #f5c4be;padding:10px 16px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--coral);display:flex;gap:8px;align-items:center;}
+.footer-note-body{padding:13px 16px;font-size:13px;color:var(--ink);line-height:1.75;background:var(--card);}
+.footer-note-body strong{font-weight:600;}
+
+@media(max-width:680px){
+  header,.search-wrap,#mainContent,#searchResults{padding-left:16px;padding-right:16px;}
+  .dept-grid{grid-template-columns:1fr;}
+  .acc-sub{display:none;}
+  .cxo-banner{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">eye<em>wa</em></div>
+  <div class="hdr-sep"></div>
+  <div class="hdr-info">
+    <div class="hdr-title">Role &amp; Department Mapping</div>
+    <div class="hdr-sub">People Ops · TA &amp; Onboarding Reference</div>
+  </div>
+  <div class="hdr-badge">INTERNAL USE</div>
+</header>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">⌕</span>
+    <input id="searchInput" type="text" placeholder="Search any role, department, or sub-department…">
+    <button id="clearBtn" title="Clear">✕</button>
+    <span id="searchCount"></span>
+  </div>
+</div>
+
+<div id="searchResults"></div>
+
+<div id="mainContent">
+
+<!-- ══════════ OPTICAL – RETAIL ══════════ -->
+<div class="accordion retail-acc" id="acc-retail">
+  <button class="acc-trigger" id="btn-retail" aria-expanded="true" aria-controls="body-retail">
+    <div class="acc-header" style="background:var(--teal)">
+      <span class="acc-icon">🏪</span>
+      <div class="acc-titles">
+        <div class="acc-title">Optical – Retail</div>
+        <div class="acc-sub">Store-facing roles · Eyewa Stores · Optical Club · Eyewa Sun · Lab &amp; Optical ops</div>
+      </div>
+    </div>
+    <div class="acc-chevron" style="background:var(--teal)">▼</div>
+  </button>
+  <div class="acc-body" id="body-retail">
+
+    <!-- CXO -->
+    <div class="cxo-banner">
+      <span class="cxo-label">CXO Ownership</span>
+      <span class="cxo-chip"><strong>Optical Dept</strong> <em>FX Jombart</em></span>
+      <span class="cxo-chip"><strong>Optical Club</strong> <em>Ahmed Khatib</em></span>
+      <span class="cxo-chip"><strong>Store</strong> <em>Ali Mansour</em></span>
+    </div>
+
+    <div class="dept-grid">
+
+      <!-- STORE -->
+      <div class="dept-card">
+        <div class="dept-head"><div class="dept-name">Store</div><div class="dept-badge">Department</div></div>
+        <div class="subdept-block">
+          <div class="subdept-label">Eyewa Stores</div>
+          <div class="roles-list">
+            <div class="role-row">Sales Advisor</div>
+            <div class="role-row">Junior Sales Advisor</div>
+            <div class="role-row">Senior Sales Advisor</div>
+            <div class="role-row">Optometrist</div>
+            <div class="role-row">Senior Optometrist</div>
+            <div class="role-row">Junior Optometrist</div>
+            <div class="role-row">Optician</div>
+            <div class="role-row">Senior Optician</div>
+            <div class="role-row">Store Manager</div>
+            <div class="role-row">Store Manager / Optometrist</div>
+            <div class="role-row">Store Incharge</div>
+            <div class="role-row">Store Incharge &amp; Optometrist</div>
+            <div class="role-row">Assistant Store Manager</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Eyewa Sun <span class="note-tag">(location-based)</span></div>
+          <div class="roles-list">
+            <div class="role-row">Sales Advisor</div>
+            <div class="role-row">Junior Sales Advisor</div>
+            <div class="role-row">Senior Sales Advisor</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label" style="color:#b07a00;background:#fef4e0;border-bottom-color:#edd590;">The Optical Club <span class="note-tag">⚠️ Legacy — do not use</span></div>
+          <div class="legacy-note">This sub-dept is retired. All Optical Club employees must be mapped to the <strong>Optical Club department</strong> below.</div>
+        </div>
+      </div>
+
+      <!-- OPTICAL CLUB -->
+      <div class="dept-card oc-card">
+        <div class="dept-head" style="background:var(--card)">
+          <div class="dept-name" style="color:#6c3483">Optical Club</div>
+          <div class="dept-badge" style="background:#f5eafb;color:#6c3483">Department</div>
+        </div>
+        <div class="hm-note" style="color:#6c3483;background:#f5eafb;border-bottom-color:#d7aee8;">ℹ️ All employees at an Optical Club-branded location must be mapped here — not under Store department.</div>
+        <div class="subdept-block">
+          <div class="subdept-label">OC Retail Store</div>
+          <div class="roles-list">
+            <div class="role-row">Sales Advisor</div>
+            <div class="role-row">Junior Sales Advisor</div>
+            <div class="role-row">Senior Sales Advisor</div>
+            <div class="role-row">Optometrist</div>
+            <div class="role-row">Optician</div>
+            <div class="role-row">Store Manager</div>
+            <div class="role-row">Store Incharge</div>
+            <div class="role-row">Store Incharge &amp; Optometrist</div>
+            <div class="role-row">Assistant Store Manager</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">OC Retail Management</div>
+          <div class="roles-list">
+            <div class="role-row">Area Manager <span class="role-em">(OC)</span></div>
+            <div class="role-row">Trainer (Optical Club)</div>
+            <div class="role-row">Interim Managing Director – OC</div>
+            <div class="role-row">Marketing Executive (Optical Club)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPTICAL DEPT -->
+      <div class="dept-card">
+        <div class="dept-head"><div class="dept-name">Optical</div><div class="dept-badge">Department</div></div>
+        <div class="subdept-block">
+          <div class="subdept-label">Lab</div>
+          <div class="roles-list">
+            <div class="role-row">Optical Technician</div>
+            <div class="role-row">Senior Optical Technician</div>
+            <div class="role-row">Lab Team Leader</div>
+            <div class="role-row">Team Leader <span class="role-em">(Lab-based)</span></div>
+            <div class="role-row">Team Captain <span class="role-em">(Lab-based)</span></div>
+            <div class="role-row">Supervisor <span class="role-em">(Lab-based)</span></div>
+            <div class="role-row">Senior Operations Coordinator <span class="role-em">(Lab-based)</span></div>
+            <div class="role-row">Operations Coordinator <span class="role-em">(Lab-based)</span></div>
+            <div class="role-row">Junior Operations Coordinator <span class="role-em">(Lab-based)</span></div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Optical Business <span class="note-tag">(managerial / HQ-based only)</span></div>
+          <div class="roles-list">
+            <div class="role-row">Optical Business Manager</div>
+            <div class="role-row">Optical Business Specialist</div>
+            <div class="role-row">Optometry Expert</div>
+            <div class="role-row">Regional Lab Manager</div>
+            <div class="role-row">Production Manager</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Tele Optometry</div>
+          <div class="roles-list">
+            <div class="role-row">Tele Optometrist</div>
+            <div class="role-row">Tele Optometry Lead</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Insurance</div>
+          <div class="roles-list">
+            <div class="role-row">Insurance Coordinator</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RETAIL MANAGEMENT -->
+      <div class="dept-card">
+        <div class="dept-head"><div class="dept-name">Retail Management</div><div class="dept-badge">Department</div></div>
+        <div class="hm-note">ℹ️ <strong>Rule of thumb:</strong> 5-day HQ-based → <strong>Retail Management</strong> sub-dept. 6-day store-involved → <strong>Retail Store Operations</strong> sub-dept. When unsure, check with the hiring manager.</div>
+        <div class="subdept-block">
+          <div class="subdept-label">Retail Store Operations</div>
+          <div class="roles-list">
+            <div class="role-row">Area Manager</div>
+            <div class="role-row">Area Visual Merchandiser</div>
+            <div class="role-row">Senior Area Visual Merchandiser</div>
+            <div class="role-row">Visual Merchandising Manager</div>
+            <div class="role-row">Visual Merchandising Lead</div>
+            <div class="role-row">Opening Coach</div>
+            <div class="role-row">Opening Coach Lead</div>
+            <div class="role-row">Optical Trainer</div>
+            <div class="role-row">Senior Optical Trainer</div>
+            <div class="role-row">Regional Optometrist</div>
+            <div class="role-row">Regional Trainer</div>
+            <div class="role-row">Regional Training Manager</div>
+            <div class="role-row">Regional Training Lead</div>
+            <div class="role-row">Academy Lead</div>
+            <div class="role-row">Stock Controller</div>
+            <div class="role-row">Stock Controller Lead</div>
+            <div class="role-row">Inventory Controller</div>
+            <div class="role-row">Onboarding Trainer</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Retail Management</div>
+          <div class="roles-list">
+            <div class="role-row">Retail Ops Director</div>
+            <div class="role-row">Retail Operations Manager</div>
+            <div class="role-row">Head of International Retail Ops</div>
+            <div class="role-row">Head of Retail Excellence</div>
+            <div class="role-row">Training Specialist</div>
+            <div class="role-row">L&amp;D Admin &amp; Innovation Specialist</div>
+            <div class="role-row">Senior Business Analyst</div>
+            <div class="role-row">Senior Retail Analyst</div>
+            <div class="role-row">Country Retail Operations Manager</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Retail Talent Acquisition <span class="note-tag">(frontline hiring only)</span></div>
+          <div class="roles-list">
+            <div class="role-row">Talent Acquisition Lead</div>
+            <div class="role-row">Talent Acquisition Specialist</div>
+            <div class="role-row">Senior TA Specialist</div>
+            <div class="role-row">Senior TA Associate</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dept-grid -->
+  </div><!-- /acc-body -->
+</div><!-- /accordion retail -->
+
+
+<!-- ══════════ OPTICAL – OPERATIONS ══════════ -->
+<div class="accordion ops-acc" id="acc-ops">
+  <button class="acc-trigger" id="btn-ops" aria-expanded="false" aria-controls="body-ops">
+    <div class="acc-header" style="background:var(--coral)">
+      <span class="acc-icon">🏭</span>
+      <div class="acc-titles">
+        <div class="acc-title">Optical – Operations</div>
+        <div class="acc-sub">Warehouse · Hub · Customer Service · Central Operations</div>
+      </div>
+    </div>
+    <div class="acc-chevron" style="background:var(--coral)">▼</div>
+  </button>
+  <div class="acc-body" id="body-ops" style="display:none">
+
+    <!-- CXO -->
+    <div class="cxo-banner">
+      <span class="cxo-label">CXO Ownership</span>
+      <span class="cxo-chip"><strong>Operations Support &amp; Production Hub</strong> <em>Mohammed Noor</em></span>
+      <span class="cxo-chip"><strong>Customer Happiness</strong> <em>Taneesha Mohandas</em></span>
+    </div>
+
+    <div class="dept-grid">
+
+      <!-- PRODUCTION HUB -->
+      <div class="dept-card">
+        <div class="dept-head"><div class="dept-name">Production Hub</div><div class="dept-badge">Department</div></div>
+        <div class="hm-note" style="color:#c0402e;background:#fff5f4;border-bottom-color:#f5c4be;">ℹ️ For <strong>Ops Coordinator, Team Leader, Team Captain</strong> — department is confirmed by the title, but <strong>check with the hiring manager for the exact sub-department.</strong></div>
+        <div class="subdept-block">
+          <div class="subdept-label">Inbound &amp; Inventory</div>
+          <div class="roles-list">
+            <div class="role-row">Operations Coordinator</div>
+            <div class="role-row">Junior Operations Coordinator</div>
+            <div class="role-row">Senior Operations Coordinator</div>
+            <div class="role-row">Team Leader</div>
+            <div class="role-row">Team Captain</div>
+            <div class="role-row">Stock Assurance Lead</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Fulfillment – Outbound</div>
+          <div class="roles-list">
+            <div class="role-row">Operations Coordinator</div>
+            <div class="role-row">Junior Operations Coordinator</div>
+            <div class="role-row">Senior Operations Coordinator</div>
+            <div class="role-row">Team Leader</div>
+            <div class="role-row">Team Captain</div>
+            <div class="role-row">Assistant Manager – Last Mile</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Hub Support</div>
+          <div class="roles-list">
+            <div class="role-row">Operations Coordinator</div>
+            <div class="role-row">Junior Operations Coordinator</div>
+            <div class="role-row">Team Leader</div>
+            <div class="role-row">Team Captain</div>
+            <div class="role-row">Supervisor</div>
+            <div class="role-row">Office Assistant</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Logistics</div>
+          <div class="roles-list">
+            <div class="role-row">Delivery Representative</div>
+            <div class="role-row">Logistics Supervisor</div>
+            <div class="role-row">Operations Coordinator</div>
+            <div class="role-row">Junior Operations Coordinator</div>
+            <div class="role-row">Team Captain</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUSTOMER HAPPINESS -->
+      <div class="dept-card">
+        <div class="dept-head"><div class="dept-name">Customer Happiness</div><div class="dept-badge">Department</div></div>
+        <div class="hm-note" style="color:#c0402e;background:#fff5f4;border-bottom-color:#f5c4be;">ℹ️ For <strong>Customer Service Specialist</strong> — confirm sub-dept (Call Centre vs. Back Office) with the hiring manager.</div>
+        <div class="subdept-block">
+          <div class="subdept-label">Customer Call Centre</div>
+          <div class="roles-list">
+            <div class="role-row">Customer Service Specialist</div>
+            <div class="role-row">Senior Customer Service Specialist</div>
+            <div class="role-row">Customer Service Supervisor</div>
+            <div class="role-row">Customer Service Coordinator</div>
+            <div class="role-row">Customer Service Operations Executive</div>
+            <div class="role-row">Support Hub Executive</div>
+            <div class="role-row">Escalations Specialist</div>
+            <div class="role-row">QA Performance Specialist</div>
+            <div class="role-row">Quality Analyst</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Back Office Support</div>
+          <div class="roles-list">
+            <div class="role-row">Customer Service Specialist</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPERATIONS SUPPORT -->
+      <div class="dept-card">
+        <div class="dept-head"><div class="dept-name">Operations Support</div><div class="dept-badge">Department</div></div>
+        <div class="subdept-block">
+          <div class="subdept-label">Central Operations Support <span class="note-tag">(oversight / managerial only)</span></div>
+          <div class="roles-list">
+            <div class="role-row">Operations Director</div>
+            <div class="role-row">Operations Manager</div>
+            <div class="role-row">Assistant Operations Manager</div>
+            <div class="role-row">Inventory Manager</div>
+            <div class="role-row">Last and Mid Mile Manager</div>
+            <div class="role-row">Supply Chain Strategist</div>
+          </div>
+        </div>
+        <div class="subdept-block">
+          <div class="subdept-label">Logistics</div>
+          <div class="roles-list">
+            <div class="role-row">Logistics Manager</div>
+            <div class="role-row">Logistics Coordinator</div>
+            <div class="role-row">Head of Supply Chain</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dept-grid -->
+  </div><!-- /acc-body -->
+</div><!-- /accordion ops -->
+
+
+<!-- FOOTER NOTE -->
+<div class="footer-note">
+  <div class="footer-note-head">⚠️ &nbsp;Not sure about a mapping? Please check before assigning.</div>
+  <div class="footer-note-body">
+    If you are unsure about which department or sub-department a role belongs to, <strong>reach out to the People Ops team or the hiring manager before assigning anything.</strong>
+    <br><br>
+    If the role is urgent and you are still unsure, <strong>flag it to the onboarding team</strong> so they can verify and correct the mapping before it causes a data issue. A quick check now saves a lot of cleanup later.
+  </div>
+</div>
+
+</div><!-- /mainContent -->
+
+<script>
+// ── ACCORDION ──
+document.querySelectorAll('.acc-trigger').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var acc = btn.closest('.accordion');
+    var isOpen = acc.classList.contains('open');
+    acc.classList.toggle('open', !isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+    var body = acc.querySelector('.acc-body');
+    body.style.display = isOpen ? 'none' : 'block';
+  });
+});
+// Open retail by default
+(function() {
+  var r = document.getElementById('acc-retail');
+  r.classList.add('open');
+  document.getElementById('btn-retail').setAttribute('aria-expanded', 'true');
+  document.getElementById('body-retail').style.display = 'block';
+})();
+
+// ── SEARCH DATA ──
+// duplicate: roles that appear in more than one dept - needs a warning
+var DUPE_STORE_OC   = 'store-oc';   // verify by HM + Location
+var DUPE_LAB_HUB    = 'lab-hub';    // verify by HM
+
+var allRoles = [
+  // STORE
+  {role:'Sales Advisor',            ba:'retail', dept:'Store',          subdept:'Eyewa Stores / Eyewa Sun',      dupe:DUPE_STORE_OC},
+  {role:'Junior Sales Advisor',     ba:'retail', dept:'Store',          subdept:'Eyewa Stores / Eyewa Sun',      dupe:DUPE_STORE_OC},
+  {role:'Senior Sales Advisor',     ba:'retail', dept:'Store',          subdept:'Eyewa Stores / Eyewa Sun',      dupe:DUPE_STORE_OC},
+  {role:'Optometrist',              ba:'retail', dept:'Store',          subdept:'Eyewa Stores',                  dupe:DUPE_STORE_OC, note:'If remote/virtual → Optical > Tele Optometry'},
+  {role:'Senior Optometrist',       ba:'retail', dept:'Store',          subdept:'Eyewa Stores'},
+  {role:'Junior Optometrist',       ba:'retail', dept:'Store',          subdept:'Eyewa Stores'},
+  {role:'Optician',                 ba:'retail', dept:'Store',          subdept:'Eyewa Stores',                  dupe:DUPE_STORE_OC},
+  {role:'Senior Optician',          ba:'retail', dept:'Store',          subdept:'Eyewa Stores'},
+  {role:'Store Manager',            ba:'retail', dept:'Store',          subdept:'Eyewa Stores',                  dupe:DUPE_STORE_OC},
+  {role:'Store Manager / Optometrist', ba:'retail', dept:'Store',       subdept:'Eyewa Stores'},
+  {role:'Store Incharge',           ba:'retail', dept:'Store',          subdept:'Eyewa Stores',                  dupe:DUPE_STORE_OC},
+  {role:'Store Incharge & Optometrist', ba:'retail', dept:'Store',      subdept:'Eyewa Stores'},
+  {role:'Assistant Store Manager',  ba:'retail', dept:'Store',          subdept:'Eyewa Stores',                  dupe:DUPE_STORE_OC},
+  // OC
+  {role:'Sales Advisor',            ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Junior Sales Advisor',     ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Senior Sales Advisor',     ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Optometrist',              ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Optician',                 ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Store Manager',            ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Store Incharge',           ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Assistant Store Manager',  ba:'retail', dept:'Optical Club',   subdept:'OC Retail Store',               dupe:DUPE_STORE_OC},
+  {role:'Area Manager (OC)',        ba:'retail', dept:'Optical Club',   subdept:'OC Retail Management'},
+  {role:'Trainer (Optical Club)',   ba:'retail', dept:'Optical Club',   subdept:'OC Retail Management'},
+  {role:'Interim Managing Director – OC', ba:'retail', dept:'Optical Club', subdept:'OC Retail Management'},
+  {role:'Marketing Executive (Optical Club)', ba:'retail', dept:'Optical Club', subdept:'OC Retail Management'},
+  // OPTICAL
+  {role:'Optical Technician',       ba:'retail', dept:'Optical',        subdept:'Lab',                           note:'Always Lab — never in Operations Support or Optical Business'},
+  {role:'Senior Optical Technician',ba:'retail', dept:'Optical',        subdept:'Lab'},
+  {role:'Lab Team Leader',          ba:'retail', dept:'Optical',        subdept:'Lab'},
+  {role:'Team Leader',              ba:'retail', dept:'Optical',        subdept:'Lab (if Lab-based)',             dupe:DUPE_LAB_HUB},
+  {role:'Team Captain',             ba:'retail', dept:'Optical',        subdept:'Lab (if Lab-based)',             dupe:DUPE_LAB_HUB},
+  {role:'Supervisor',               ba:'retail', dept:'Optical',        subdept:'Lab (if Lab-based)',             dupe:DUPE_LAB_HUB},
+  {role:'Senior Operations Coordinator', ba:'retail', dept:'Optical',  subdept:'Lab (if Lab-based)',             dupe:DUPE_LAB_HUB},
+  {role:'Operations Coordinator',   ba:'retail', dept:'Optical',        subdept:'Lab (if Lab-based)',             dupe:DUPE_LAB_HUB},
+  {role:'Junior Operations Coordinator', ba:'retail', dept:'Optical',  subdept:'Lab (if Lab-based)',             dupe:DUPE_LAB_HUB},
+  {role:'Optical Business Manager', ba:'retail', dept:'Optical',        subdept:'Optical Business'},
+  {role:'Optical Business Specialist', ba:'retail', dept:'Optical',    subdept:'Optical Business'},
+  {role:'Optometry Expert',         ba:'retail', dept:'Optical',        subdept:'Optical Business'},
+  {role:'Regional Lab Manager',     ba:'retail', dept:'Optical',        subdept:'Optical Business'},
+  {role:'Production Manager',       ba:'retail', dept:'Optical',        subdept:'Optical Business'},
+  {role:'Tele Optometrist',         ba:'retail', dept:'Optical',        subdept:'Tele Optometry'},
+  {role:'Tele Optometry Lead',      ba:'retail', dept:'Optical',        subdept:'Tele Optometry'},
+  {role:'Insurance Coordinator',    ba:'retail', dept:'Optical',        subdept:'Insurance'},
+  // RETAIL MANAGEMENT
+  {role:'Area Manager',             ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Area Visual Merchandiser', ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Visual Merchandising Manager', ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Opening Coach',            ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Optical Trainer',          ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Senior Optical Trainer',   ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Regional Optometrist',     ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Regional Trainer',         ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Stock Controller',         ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Stock Controller Lead',    ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Inventory Controller',     ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Onboarding Trainer',       ba:'retail', dept:'Retail Management', subdept:'Retail Store Operations'},
+  {role:'Retail Ops Director',      ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Retail Operations Manager',ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Head of International Retail Ops', ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Head of Retail Excellence',ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Training Specialist',      ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Senior Business Analyst',  ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Country Retail Operations Manager', ba:'retail', dept:'Retail Management', subdept:'Retail Management'},
+  {role:'Talent Acquisition Lead',  ba:'retail', dept:'Retail Management', subdept:'Retail Talent Acquisition', note:'Frontline/store recruiting only'},
+  {role:'Talent Acquisition Specialist', ba:'retail', dept:'Retail Management', subdept:'Retail Talent Acquisition'},
+  {role:'Senior TA Specialist',     ba:'retail', dept:'Retail Management', subdept:'Retail Talent Acquisition'},
+  {role:'Senior TA Associate',      ba:'retail', dept:'Retail Management', subdept:'Retail Talent Acquisition'},
+  // PRODUCTION HUB
+  {role:'Team Leader',              ba:'ops',    dept:'Production Hub', subdept:'Inbound & Inventory / Fulfillment / Hub Support / Logistics', dupe:DUPE_LAB_HUB},
+  {role:'Team Captain',             ba:'ops',    dept:'Production Hub', subdept:'Inbound & Inventory / Fulfillment / Logistics',               dupe:DUPE_LAB_HUB},
+  {role:'Operations Coordinator',   ba:'ops',    dept:'Production Hub', subdept:'Inbound & Inventory / Fulfillment / Hub Support / Logistics',  dupe:DUPE_LAB_HUB},
+  {role:'Junior Operations Coordinator', ba:'ops', dept:'Production Hub', subdept:'Inbound & Inventory / Fulfillment / Hub Support / Logistics',dupe:DUPE_LAB_HUB},
+  {role:'Senior Operations Coordinator', ba:'ops', dept:'Production Hub', subdept:'Inbound & Inventory or Fulfillment-Outbound'},
+  {role:'Supervisor',               ba:'ops',    dept:'Production Hub', subdept:'Hub Support',                    dupe:DUPE_LAB_HUB},
+  {role:'Stock Assurance Lead',     ba:'ops',    dept:'Production Hub', subdept:'Inbound & Inventory'},
+  {role:'Delivery Representative',  ba:'ops',    dept:'Production Hub', subdept:'Logistics'},
+  {role:'Logistics Supervisor',     ba:'ops',    dept:'Production Hub', subdept:'Logistics'},
+  {role:'Assistant Manager – Last Mile', ba:'ops', dept:'Production Hub', subdept:'Fulfillment – Outbound'},
+  {role:'Office Assistant',         ba:'ops',    dept:'Production Hub', subdept:'Hub Support'},
+  // CUSTOMER HAPPINESS
+  {role:'Customer Service Specialist', ba:'ops', dept:'Customer Happiness', subdept:'Customer Call Centre / Back Office Support', note:'Confirm sub-dept with hiring manager'},
+  {role:'Senior Customer Service Specialist', ba:'ops', dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'Customer Service Supervisor', ba:'ops', dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'Customer Service Coordinator', ba:'ops', dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'Customer Service Operations Executive', ba:'ops', dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'Support Hub Executive',    ba:'ops',    dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'Escalations Specialist',   ba:'ops',    dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'QA Performance Specialist',ba:'ops',    dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  {role:'Quality Analyst',          ba:'ops',    dept:'Customer Happiness', subdept:'Customer Call Centre'},
+  // OPS SUPPORT
+  {role:'Operations Director',      ba:'ops',    dept:'Operations Support', subdept:'Central Operations Support'},
+  {role:'Operations Manager',       ba:'ops',    dept:'Operations Support', subdept:'Central Operations Support'},
+  {role:'Assistant Operations Manager', ba:'ops', dept:'Operations Support', subdept:'Central Operations Support'},
+  {role:'Inventory Manager',        ba:'ops',    dept:'Operations Support', subdept:'Central Operations Support'},
+  {role:'Last and Mid Mile Manager',ba:'ops',    dept:'Operations Support', subdept:'Central Operations Support'},
+  {role:'Supply Chain Strategist',  ba:'ops',    dept:'Operations Support', subdept:'Central Operations Support'},
+  {role:'Logistics Manager',        ba:'ops',    dept:'Operations Support', subdept:'Logistics'},
+  {role:'Logistics Coordinator',    ba:'ops',    dept:'Operations Support', subdept:'Logistics'},
+  {role:'Head of Supply Chain',     ba:'ops',    dept:'Operations Support', subdept:'Logistics'},
+];
+
+// ── SEARCH ──
+var searchInput  = document.getElementById('searchInput');
+var clearBtn     = document.getElementById('clearBtn');
+var searchDiv    = document.getElementById('searchResults');
+var mainContent  = document.getElementById('mainContent');
+var searchCount  = document.getElementById('searchCount');
+
+searchInput.addEventListener('input', function() { runSearch(this.value); });
+clearBtn.addEventListener('click', function() { searchInput.value = ''; runSearch(''); searchInput.focus(); });
+
+function dupeWarn(dupe) {
+  if (dupe === 'store-oc') {
+    return '<div class="sr-warn">⚠️ This title exists in both <strong>Store</strong> and <strong>Optical Club</strong> departments. Verify based on <strong>hiring manager confirmation</strong> and <strong>physical location</strong> of the employee.</div>';
+  }
+  if (dupe === 'lab-hub') {
+    return '<div class="sr-warn">⚠️ This title exists in both <strong>Optical › Lab</strong> and <strong>Production Hub</strong>. Verify the correct sub-department with the <strong>hiring manager</strong>.</div>';
+  }
+  return '';
+}
+
+function runSearch(val) {
+  var q = val.toLowerCase().trim();
+  if (!q) {
+    searchDiv.style.display = 'none';
+    mainContent.style.display = 'block';
+    searchCount.textContent = '';
+    return;
+  }
+  searchDiv.style.display = 'block';
+  mainContent.style.display = 'none';
+
+  var hits = allRoles.filter(function(r) {
+    return (
+      r.role.toLowerCase().indexOf(q) !== -1 ||
+      r.dept.toLowerCase().indexOf(q) !== -1 ||
+      r.subdept.toLowerCase().indexOf(q) !== -1
+    );
+  });
+
+  // Deduplicate by role+dupe key so we show 1 card with merged info for dupes
+  var seen = {};
+  var deduped = [];
+  hits.forEach(function(r) {
+    var key = r.role.toLowerCase() + '|' + (r.dupe || '');
+    if (!seen[key]) {
+      seen[key] = true;
+      // Collect all dept entries for this role
+      var allDepts = hits.filter(function(x) { return x.role.toLowerCase() === r.role.toLowerCase() && (x.dupe || '') === (r.dupe || ''); });
+      deduped.push({role: r.role, ba: r.ba, dupe: r.dupe, note: r.note, entries: allDepts});
+    }
+  });
+
+  searchCount.textContent = deduped.length + ' result' + (deduped.length !== 1 ? 's' : '');
+
+  if (!deduped.length) {
+    searchDiv.innerHTML = '<div class="sr-empty">No results. Try a partial title or department name.</div>';
+    return;
+  }
+
+  var html = '';
+  deduped.forEach(function(item) {
+    var pillClass = item.ba === 'retail' ? 'retail' : 'ops';
+    var pillLabel = item.ba === 'retail' ? 'Optical – Retail' : 'Optical – Operations';
+    // If dupe, show both pills
+    var pills = '';
+    if (item.dupe) {
+      pills = '<span class="sr-pill retail">Optical – Retail</span>';
+      if (item.ba === 'ops') { pills += ' <span class="sr-pill ops">Optical – Operations</span>'; }
+    } else {
+      pills = '<span class="sr-pill ' + pillClass + '">' + pillLabel + '</span>';
+    }
+
+    html += '<div class="sr-card">';
+    html += pills;
+    html += '<div style="flex:1">';
+    html += '<div class="sr-role">' + item.role + '</div>';
+
+    if (item.dupe) {
+      // Show each mapping on its own line
+      var unique = [];
+      var usedKeys = {};
+      item.entries.forEach(function(e) {
+        var k = e.dept + '|' + e.subdept;
+        if (!usedKeys[k]) { usedKeys[k] = true; unique.push(e); }
+      });
+      unique.forEach(function(e) {
+        html += '<div class="sr-path">• <strong>Dept:</strong> ' + e.dept + ' &nbsp;→&nbsp; <strong>Sub-dept:</strong> ' + e.subdept + '</div>';
+      });
+      html += dupeWarn(item.dupe);
+    } else {
+      var e = item.entries[0];
+      html += '<div class="sr-path"><strong>Dept:</strong> ' + e.dept + ' &nbsp;→&nbsp; <strong>Sub-dept:</strong> ' + e.subdept + '</div>';
+    }
+
+    if (item.note) { html += '<div class="sr-note">ℹ️ ' + item.note + '</div>'; }
+    html += '</div></div>';
+  });
+  searchDiv.innerHTML = html;
+}
+</script>
+</body>
+</html>
